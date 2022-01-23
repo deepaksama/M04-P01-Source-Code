@@ -1,3 +1,4 @@
+from email import message
 import json
 import hashlib
 import base64
@@ -70,9 +71,24 @@ class Blockchain:
         return True
 
     def __process_transactions(self, transactions):
-        # Appropriately transfer value from the sender to the receiver
-        # For all transactions, first check that the sender has enough balance. 
+        # For all transactions, first check that the sender has enough balance.
         # Return False otherwise
+        for transaction in transactions:
+            sender_account_balance = self._accounts.get(
+                transaction["message"]["sender"]).balance
+
+            if transaction["message"]["value"] > sender_account_balance:
+                return False
+
+        # Appropriately transfer value from the sender to the receiver
+        for transaction in transactions:
+            sending_amount = transaction["message"]["value"]
+
+            self._accounts.get(
+                transaction["message"]["receiver"]).increase_balance(sending_amount)
+            self._accounts.get(
+                transaction["message"]["sender"]).decrease_balance(sending_amount)
+
         return True
 
     # Creates a new block and appends to the chain
