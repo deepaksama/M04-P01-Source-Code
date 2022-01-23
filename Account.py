@@ -38,7 +38,28 @@ class Account:
     def __generate_key_pair(self):
         # Implement key pair generation logic
         # Convert them to pem format strings and store in the class attributes already defined
-        pass
+
+        # Generating the private/public key pair
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048
+        )
+
+        # Assigning the public key from the pair
+        public_key = private_key.public_key()
+
+        # Serializing the private key data to show what the file pem data looks like
+        self._private_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+
+        # Serializing the public key data to show what the file pem data looks like
+        self._ppublic_pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
 
     def create_transaction(self, receiver_id, value, tx_metadata=''):
         nonce = self._nonce + 1
