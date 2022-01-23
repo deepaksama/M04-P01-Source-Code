@@ -112,10 +112,16 @@ class Blockchain:
             print(f'ERROR: Transaction: {transaction} failed signature validation')
             return False
 
-
     def __validate_chain_hash_integrity(self):
         # Run through the whole blockchain and ensure that previous hash is actually the hash of the previous block
         # Return False otherwise
+        prev_block_hash = self._chain[0]._block_hash
+        for block in self._chain[1:]:
+            if prev_block_hash != block._previous_block_hash:
+                return False
+            else:
+                prev_block_hash = block._block_hash
+
         return True
 
     def __validate_block_hash_target(self):
@@ -134,8 +140,7 @@ class Blockchain:
         # Call __validate_chain_hash_integrity and implement that method. Return False if check fails
         # Call __validate_block_hash_target and implement that method. Return False if check fails
         # Call __validate_complete_account_balances and implement that method. Return False if check fails
-
-        return True
+        return self.__validate_chain_hash_integrity() and self.__validate_block_hash_target() and self.__validate_complete_account_balances()
 
     def add_account(self, account):
         self._accounts[account.id] = account
