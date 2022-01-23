@@ -14,6 +14,7 @@ class Account:
     # private and public pem strings should be set inside __generate_key_pair
     def __init__(self, sender_id, balance=100):
         self._id = sender_id
+        self._initial_balance = balance
         self._balance = balance
         self._nonce = 0
         self._private_pem = None
@@ -31,6 +32,10 @@ class Account:
     @property
     def balance(self):
         return self._balance
+
+    @property
+    def initial_balance(self):
+        return self._initial_balance
 
     def increase_balance(self, value):
         self._balance += value
@@ -62,7 +67,7 @@ class Account:
         )
 
     # Creates pre-hashed mesage
-    def _get_hash(self, message):
+    def __get_hash(self, message):
         # Serialize transaction data with keys ordered, and then convert to bytes format
         hash_string = json.dumps(message, sort_keys=True)
         encoded_hash_string = hash_string.encode('utf-8')
@@ -85,7 +90,7 @@ class Account:
         )
 
         # Creates pre-hashed mesage
-        encoded_message_hash = self._get_hash(transaction_message)
+        encoded_message_hash = self.__get_hash(transaction_message)
 
         # Sign the encoded hash message using private key
         unformatted_signature = private_key.sign(encoded_message_hash, padding.PSS(mgf=padding.MGF1(

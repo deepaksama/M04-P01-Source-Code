@@ -23,6 +23,8 @@ block_chain.add_account(dave_account)
 block_chain.add_transaction(alice_account.create_transaction('bob', 20))
 block_chain.add_transaction(bob_account.create_transaction('carol', 30))
 block_chain.add_transaction(carol_account.create_transaction('alice', 50))
+# Uncomment below line for testing validation failure use case
+# block_chain.add_transaction(bob_account.create_transaction('dave', 100))
 block_chain.create_new_block()
 time.sleep(1)
 

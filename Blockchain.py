@@ -70,15 +70,20 @@ class Blockchain:
 
         return True
 
-    def __process_transactions(self, transactions):
-        # For all transactions, first check that the sender has enough balance.
-        # Return False otherwise
+    def __validate_transactions(self, transactions):
         for transaction in transactions:
             sender_account_balance = self._accounts.get(
                 transaction["message"]["sender"]).balance
 
             if transaction["message"]["value"] > sender_account_balance:
                 return False
+        return True
+
+    def __process_transactions(self, transactions):
+        # For all transactions, first check that the sender has enough balance.
+        # Return False otherwise
+        if not self.__validate_transactions(transactions):
+            return False
 
         # Appropriately transfer value from the sender to the receiver
         for transaction in transactions:
@@ -127,11 +132,48 @@ class Blockchain:
     def __validate_block_hash_target(self):
         # Run through the whole blockchain and ensure that block hash meets hash target criteria, and is the actual hash of the block
         # Return False otherwise
+        for block in self._chain[1:]:
+            if self._hash_target < block._block_hash:
+                return False
+
         return True
 
     def __validate_complete_account_balances(self):
         # Run through the whole blockchain and ensure that balances never become negative from any transaction
         # Return False otherwise
+        account_balances = {}
+        for block in self._chain[1:]:
+            if not self.__validate_transaction_of_block(block, account_balances):
+                return False
+        return True
+
+    # Validates account balances across transactions for block starting with initial balance
+    # and ensures that blanace never goes less than zero
+    def __validate_transaction_of_block(self, block, account_balances):
+        for transaction in block.transactions:
+            sending_amount = transaction["message"]["value"]
+            sender_account_id = transaction["message"]["sender"]
+            receiver_account_id = transaction["message"]["receiver"]
+            # If this is the first transaction for sender account initialize the balance with initial_balances
+            if not sender_account_id in account_balances:
+                account_balances[sender_account_id] = {}
+                account_balances[sender_account_id]["balance"] = self._accounts.get(
+                    sender_account_id).initial_balance
+            # If this is the first transaction for receiver account initialize the balance with initial_balances
+            if not receiver_account_id in account_balances:
+                account_balances[receiver_account_id] = {}
+                account_balances[receiver_account_id]["balance"] = self._accounts.get(
+                    receiver_account_id).initial_balance
+
+            # Increment and decrement the sender and receiver accounts appropriatly
+            account_balances[sender_account_id]["balance"] = account_balances[
+                sender_account_id]["balance"] - sending_amount
+            account_balances[receiver_account_id]["balance"] = account_balances[
+                receiver_account_id]["balance"] + sending_amount
+
+            # Now validate if the sender balance gone below zero after transaction
+            if account_balances[sender_account_id]["balance"] < 0:
+                return False
         return True
 
     # Blockchain validation function
